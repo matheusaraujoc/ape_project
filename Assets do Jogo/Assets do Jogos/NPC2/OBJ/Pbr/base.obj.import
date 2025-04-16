@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://b8e8iiy6fuult"
+path="res://.godot/imported/base.obj-97ae976f4d563459f75d970b04d90eee.mesh"
+
+[deps]
+
+files=["res://.godot/imported/base.obj-97ae976f4d563459f75d970b04d90eee.mesh"]
+
+source_file="res://Assets do Jogo/Assets do Jogos/NPC2/OBJ/Pbr/base.obj"
+dest_files=["res://.godot/imported/base.obj-97ae976f4d563459f75d970b04d90eee.mesh", "res://.godot/imported/base.obj-97ae976f4d563459f75d970b04d90eee.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

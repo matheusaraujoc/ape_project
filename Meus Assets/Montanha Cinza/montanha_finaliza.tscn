@@ -1,0 +1,12 @@
+[gd_scene load_steps=4 format=3 uid="uid://bwoo2sxatxurl"]
+
+[ext_resource type="PackedScene" uid="uid://dotj7ep3dkhcd" path="res://Meus Assets/Montanha Cinza/Shaded/base.fbx" id="1_oqn37"]
+[ext_resource type="Texture2D" uid="uid://10fq432gju62" path="res://Meus Assets/Montanha Cinza/Shaded/shaded.png" id="2_h7d17"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tltvm"]
+albedo_texture = ExtResource("2_h7d17")
+
+[node name="base" instance=ExtResource("1_oqn37")]
+
+[node name="model" parent="." index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_tltvm")

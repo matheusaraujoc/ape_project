@@ -1,0 +1,186 @@
+[gd_scene load_steps=12 format=3 uid="uid://bomru2d6331rq"]
+
+[ext_resource type="PackedScene" uid="uid://dwhnxnb71oc3s" path="res://Assets do Jogo/fox/fox.glb" id="1_r8rmh"]
+
+[sub_resource type="VoxelGIData" id="VoxelGIData_npbjd"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_npbjd"]
+sky_top_color = Color(0.509334, 0.644299, 0.937821, 1)
+sky_horizon_color = Color(0.900997, 0.959013, 1.02785, 1)
+ground_bottom_color = Color(0.166571, 0.26367, 0.245508, 1)
+ground_horizon_color = Color(0.900997, 0.959013, 1.02785, 1)
+energy_multiplier = 0.5
+
+[sub_resource type="Sky" id="Sky_1vlbt"]
+sky_material = SubResource("ProceduralSkyMaterial_npbjd")
+
+[sub_resource type="Environment" id="Environment_vc7fi"]
+background_mode = 2
+background_energy_multiplier = 1.5
+sky = SubResource("Sky_1vlbt")
+tonemap_mode = 4
+ssao_enabled = true
+glow_enabled = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_1vlbt"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_npbjd"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1vlbt"]
+size = Vector3(9.99438, 0.330292, 9.94525)
+
+[sub_resource type="GDScript" id="GDScript_npbjd"]
+script/source = "extends CharacterBody3D
+
+
+const SPEED = 5.0
+const JUMP_VELOCITY = 4.5
+const ACCELERATION = 15
+@onready var camera_pivot: Node3D = $camera_pivot
+@onready var camera: Camera3D = $camera_pivot/camera
+@onready var fox_skin: Node3D = $fox
+@onready var anim_player: AnimationPlayer = fox_skin.get_node(\"AnimationPlayer\")
+
+var mouse_sentitivity : float = 0.15
+var camera_rotation : Vector2 = Vector2.ZERO
+var last_movement_dir := Vector3.BACK
+var is_jumping
+
+func _ready() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	anim_player.play(\"Idle\")
+
+func _unhandled_input(event: InputEvent) -> void:
+	var is_camera_motion := (
+		event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
+	)
+
+	if is_camera_motion:
+		camera_rotation = event.screen_relative * mouse_sentitivity
+		
+func _input(event: InputEvent) -> void:
+	if Input.is_action_just_pressed(\"ui_cancel\"):
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if Input.is_action_pressed(\"left_click\"):
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	
+func _physics_process(delta: float) -> void:
+	camera_pivot.rotation.x += camera_rotation.y * delta
+	camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, deg_to_rad(-35), deg_to_rad(20))
+	camera_pivot.rotation.y -= camera_rotation.x * delta
+
+	camera_rotation = Vector2.ZERO
+	
+	# Add the gravity.
+	if not is_on_floor():
+		velocity += get_gravity() * delta
+
+	is_jumping = Input.is_action_just_pressed(\"ui_accept\") and is_on_floor()
+
+	# Handle jump.
+	if is_jumping:
+		velocity.y = JUMP_VELOCITY
+
+	# Get the input direction and handle the movement/deceleration.
+	# As good practice, you should replace UI actions with custom gameplay actions.
+	var input_dir := Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")
+	var forward := camera.global_basis.z
+	var right := camera.global_basis.x
+	var direction := (forward * input_dir.y + right * input_dir.x).normalized()
+	direction.y = 0.0
+
+	var y_velocity = velocity.y
+	velocity.y = 0.0
+
+	if direction:
+		velocity = velocity.move_toward(direction * SPEED, ACCELERATION * delta)
+		
+	else:
+		velocity = velocity.move_toward(Vector3.ZERO, ACCELERATION * delta)
+
+	velocity.y = y_velocity
+	move_and_slide()
+	_handle_animation()
+	
+	if direction.length() > 0.1:
+		last_movement_dir = direction
+	
+	var target_angle := Vector3.BACK.signed_angle_to(last_movement_dir, Vector3.UP)
+	fox_skin.global_rotation.y = lerp_angle(fox_skin.global_rotation.y, target_angle, ACCELERATION * delta)
+	
+func _handle_animation():
+	if is_jumping:
+		if anim_player.current_animation != \"jump\":
+			anim_player.play(\"Jump\", 0.2)
+	elif not is_on_floor():
+		if velocity.y < -0.1:
+			if anim_player.current_animation != \"Fall\":
+				anim_player.play(\"Fall\", 0.2)
+	else:
+		if velocity.length() > 0.1:
+			if anim_player.current_animation != \"Run\":
+				anim_player.play(\"Run\", 0.2)
+		else:
+			if anim_player.current_animation != \"Idle\":
+				anim_player.play(\"Idle\", 0.2)
+"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1vlbt"]
+radius = 0.316335
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_vc7fi"]
+
+[node name="Space" type="Node3D"]
+
+[node name="VoxelGI" type="VoxelGI" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0627899, 1.15082, -0.129959)
+size = Vector3(10.105, 5.82434, 11.013)
+data = SubResource("VoxelGIData_npbjd")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_vc7fi")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Map" type="Node3D" parent="."]
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Map"]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 1.01623, 0)
+mesh = SubResource("BoxMesh_1vlbt")
+
+[node name="Chao" type="StaticBody3D" parent="Map"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/Chao"]
+transform = Transform3D(10, 0, 0, 0, 0.12, 0, 0, 0, 10, 0, 0, 0)
+mesh = SubResource("BoxMesh_npbjd")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/Chao"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0045166, -0.107101, -0.0830994)
+shape = SubResource("BoxShape3D_1vlbt")
+
+[node name="player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.77705, 1.01299, 0)
+collision_layer = 2
+script = SubResource("GDScript_npbjd")
+
+[node name="colison" type="CollisionShape3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.133188, 0)
+shape = SubResource("CapsuleShape3D_1vlbt")
+debug_color = Color(7.21961e-07, 0.366996, 0.431423, 0.42)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.133758, 0)
+visible = false
+layers = 2
+mesh = SubResource("CapsuleMesh_vc7fi")
+
+[node name="camera_pivot" type="Node3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 3, 0)
+
+[node name="camera" type="Camera3D" parent="player/camera_pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8)
+
+[node name="fox" parent="player" instance=ExtResource("1_r8rmh")]
+transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, -0.926096, 0)
